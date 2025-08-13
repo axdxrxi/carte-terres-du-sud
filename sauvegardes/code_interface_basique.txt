@@ -1,0 +1,47 @@
+import pandas as pd
+import dash
+from dash import html, dcc
+import plotly.graph_objs as go
+
+# Lecture du fichier CSV fourni (déjà analysé comme un site unique)
+file_path = "export_23-07-2025--15-46.csv"
+df = pd.read_csv(file_path, sep=';', encoding='utf-8')
+
+# Nettoyage : conversion des valeurs avec virgule en float
+mois = df.columns[1:-1]  # Mois de Août à Juillet
+periods = df.iloc[:, 0]  # Périodes : Période précédente, Période courante...
+
+data = {}
+for i, label in enumerate(periods):
+    values = df.iloc[i, 1:-1].str.replace(',', '.').astype(float)
+    data[label] = values
+
+# Création de l'application Dash
+app = dash.Dash(__name__)
+app.title = "Conso énergétique - Site unique"
+
+app.layout = html.Div([
+    html.H2("Consommation énergétique annuelle - Site unique", style={"textAlign": "center"}),
+
+    dcc.Graph(
+        id='conso-graph',
+        figure={
+            'data': [
+                go.Scatter(x=mois, y=data['Période précédente'], name='Période précédente', mode='lines+markers'),
+                go.Scatter(x=mois, y=data['Période courante'], name='Période courante', mode='lines+markers'),
+                go.Scatter(x=mois, y=data['Consommation de référence'], name='Référence', mode='lines+markers'),
+                go.Bar(x=mois, y=data['Écart'], name='Écart', marker_color='crimson', opacity=0.4, yaxis='y')
+            ],
+            'layout': go.Layout(
+                title='Évolution mensuelle de la consommation',
+                xaxis={'title': 'Mois'},
+                yaxis={'title': 'Consommation (kWh ou €)'},
+                hovermode='closest',
+                legend={'orientation': 'h'}
+            )
+        }
+    )
+])
+
+if __name__ == '__main__':
+    app.run(debug=True)

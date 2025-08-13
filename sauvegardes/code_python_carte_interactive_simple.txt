@@ -1,0 +1,49 @@
+import pandas as pd
+import folium
+from folium.plugins import MarkerCluster
+import webbrowser
+
+csv_path = "C:/Analyse_surfacique/sites.csv"
+kml_path = "C:/Analyse_surfacique/parkings TDS.kml"
+
+df = pd.read_csv(csv_path, sep=";", encoding='utf-8')
+print("Colonnes du CSV :", df.columns)
+
+required_cols = ["Latitude", "Longitude"]
+for col in required_cols:
+    if col not in df.columns:
+        print(f"⚠️ La colonne '{col}' est manquante dans le CSV.")
+        exit()
+
+# Vérification des valeurs manquantes
+print("Valeurs manquantes dans Latitude et Longitude :")
+print(df[["Latitude", "Longitude"]].isnull().sum())
+print(df[df["Latitude"].isnull() | df["Longitude"].isnull()])
+
+# Supprimer les lignes avec coordonnées manquantes
+df_clean = df.dropna(subset=["Latitude", "Longitude"])
+
+mean_lat = df_clean["Latitude"].mean()
+mean_lon = df_clean["Longitude"].mean()
+
+m = folium.Map(location=[mean_lat, mean_lon], zoom_start=8)
+
+marker_cluster = MarkerCluster().add_to(m)
+for _, row in df_clean.iterrows():
+    folium.Marker(
+        location=[row["Latitude"], row["Longitude"]],
+        popup=row["Ville"],
+        tooltip=row["Ville"],
+        icon=folium.Icon(color="blue", icon="info-sign")
+    ).add_to(marker_cluster)
+
+# KML désactivé pour l'instant
+# folium.Kml(open(kml_path, 'r', encoding='utf-8').read(), name="Parkings TDS").add_to(m)
+
+folium.LayerControl().add_to(m)
+
+output_path = "C:/Analyse_surfacique/carte_terres_du_sud.html"
+m.save(output_path)
+print(f"✅ Carte sauvegardée : {output_path}")
+
+webbrowser.open(output_path)
