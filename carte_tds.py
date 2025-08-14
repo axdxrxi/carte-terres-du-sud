@@ -116,5 +116,5 @@ all_coords = pd.concat([
 carte.fit_bounds(all_coords[["latitude", "longitude"]].values.tolist())
 
 # Sauvegarde de la carte
-carte.save("carte_terres_du_sud.html")
-print("✅ Carte générée : 'carte_terres_du_sud.html' avec zoom automatique et LayerControl")
+carte.save("index.html")
+print("✅ Carte générée : 'index.html' avec zoom automatique et LayerControl")
